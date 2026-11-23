@@ -88,7 +88,7 @@ MSG = {
 _LANGS = {"hindi": 0, "english": 1, "hinglish": 2}
 
 YES = {"haan", "han", "ha", "haa", "hanji", "haanji", "yes", "yeah", "ok", "okay", "theek", "thik", "bilkul", "pakka",
-       "sure", "ji", "karo", "kar"}
+       "sure", "ji", "karo", "kar", "yep", "yup", "ahead", "confirm"}
 NO = {"nahi", "nahin", "nai", "na", "no", "mat", "cancel", "rehne", "rahne", "ruko", "nope"}
 SHARE = re.compile(r"\b(send|bhejo|bhej|bhejna|bhejdo|share|shayar|sheyar|upload|aplod|email|mail|forward|"
                    r"post karo|whatsapp pe bhej|telegram pe bhej|leak|transfer)\b")
@@ -107,7 +107,10 @@ class Brain:
 
     # ------------------------------------------------------------ talking
     def lang(self):
-        return config.load().get("reply_language", "hindi")
+        fixed = config.load().get("reply_language", "auto")
+        if fixed in _LANGS:
+            return fixed
+        return getattr(self, "turn_lang", "hindi")
 
     def m(self, key, **kw):
         v = MSG[key][_LANGS.get(self.lang(), 0)]
@@ -120,9 +123,11 @@ class Brain:
         self.emit({"type": "say", "text": text, "lang": self.lang(), "mood": mood, "final": final})
 
     # ------------------------------------------------------------ main entry
-    def hear(self, text, follow=False, source="voice"):
-        """text: what speech-to-text heard. follow: the face says we are inside the 'talk again' window."""
+    def hear(self, text, follow=False, source="voice", spoken=None):
+        """text: what speech-to-text heard. follow: the face says we are inside the 'talk again' window.
+        spoken: 'en' / 'hi' from speech-to-text, so Bunny answers in the language you used."""
         cfg = config.load()
+        self.turn_lang = reply_language(text, spoken)
         found, rest = intents.find_wake(text, cfg.get("wake_words", []))
         if not (found or follow or source != "voice"):
             self.emit({"type": "ignored", "heard": text})
@@ -268,7 +273,7 @@ class Brain:
     def _chat_thread(self, text, my, cfg):
         buf, full = "", ""
         try:
-            for piece in llm.chat_stream(self.history, text, cfg):
+            for piece in llm.chat_stream(self.history, text, cfg, self.lang()):
                 if my != self.gen:
                     return  # interrupted ("Bunny chup")
                 buf += piece
@@ -292,6 +297,24 @@ class Brain:
             self.emit({"type": "say_end"})
             self.history += [{"role": "user", "content": text}, {"role": "assistant", "content": clean(full)}]
             self.history = self.history[-12:]
+
+
+HINDI_WORDS = {"hai", "hain", "kya", "kaise", "kaisa", "karo", "kar", "mein", "mujhe", "tum", "tera", "mera", "kyun",
+               "kyu", "kab", "kahan", "kaha", "nahi", "nahin", "aur", "bhi", "ye", "yeh", "wo", "woh", "kuch", "batao",
+               "hota", "hoti", "ka", "ki", "ke", "ko", "se", "kholo", "band", "chalao", "accha", "acha", "theek",
+               "haan", "bolo", "kaun", "kitna", "kitne", "samjhao", "bata", "tumhara", "aap", "apna", "hum"}
+
+
+def reply_language(text, spoken=None):
+    """Answer in the language that was used: Devanagari or Hinglish words -> Hindi, otherwise English."""
+    if re.search(r"[\u0900-\u097F]", text or ""):
+        return "hindi"
+    words = set(re.sub(r"[^a-z ]", " ", (text or "").lower()).split())
+    if words & HINDI_WORDS:
+        return "hindi"
+    if spoken == "hi" and not words:
+        return "hindi"
+    return "english"
 
 
 def clean(t):

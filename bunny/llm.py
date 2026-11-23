@@ -14,7 +14,7 @@ LANG_RULE = {
 }
 
 
-def system_prompt(cfg):
+def system_prompt(cfg, lang=None):
     name, user = cfg.get("bunny_name", "Bunny"), cfg.get("user_name", "Akash")
     return (
         f"You are {name}, a cute, warm and playful little bunny who is {user}'s AI friend. "
@@ -25,7 +25,7 @@ def system_prompt(cfg):
         "offline and might not know the latest. If you are not sure about a fact, say so honestly. "
         "You cannot send, upload or share files, and you never pretend you did something on the computer: "
         "the app does the commands, you only talk. "
-        + LANG_RULE.get(cfg.get("reply_language", "hindi"), LANG_RULE["hindi"])
+        + LANG_RULE.get(lang or cfg.get("reply_language", "hindi"), LANG_RULE["hindi"])
     )
 
 
@@ -68,10 +68,10 @@ def pull(name, progress=None):
     return True
 
 
-def chat_stream(history, text, cfg=None):
-    """Yields pieces of the answer as they are generated."""
+def chat_stream(history, text, cfg=None, lang=None):
+    """Yields pieces of the answer as they are generated. lang: hindi | english | hinglish."""
     cfg = cfg or config.load()
-    msgs = [{"role": "system", "content": system_prompt(cfg)}] + history[-8:] + [{"role": "user", "content": text}]
+    msgs = [{"role": "system", "content": system_prompt(cfg, lang)}] + history[-8:] + [{"role": "user", "content": text}]
     body = {"model": cfg.get("llm_model", "gemma3:4b"), "messages": msgs, "stream": True,
             "options": {"temperature": 0.6, "num_predict": 300}, "keep_alive": "30m"}
     with _post("/api/chat", body, timeout=300) as r:

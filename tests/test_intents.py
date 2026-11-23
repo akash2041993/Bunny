@@ -36,6 +36,13 @@ CASES = [
     ("बनी क्लोज़ क्रोम", True, {"action": "close_app", "app": "chrome"}),
     ("बनी फोटोशॉप कैसे सीखें", True, None),
     ("बनी कंप्यूटर क्या होता है", True, None),
+    ("बनी, अपन फोटोशॉप", True, {"action": "open_app", "app": "photoshop"}),
+    ("Bunny, what time is it?", True, {"action": "time"}),
+    ("Bunny turn up the volume", True, {"action": "volume_up"}),
+    ("Bunny, turn off the computer", True, {"action": "shutdown"}),
+    ("Bunny turn on the computer", True, {"action": "wake_pc"}),
+    ("Bunny, close Photoshop.", True, {"action": "close_app", "app": "photoshop"}),
+    ("Bunny, what is a black hole?", True, None),
 ]
 bad = 0
 for text, wake, want in CASES:

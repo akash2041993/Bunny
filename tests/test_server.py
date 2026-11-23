@@ -52,7 +52,9 @@ st, page = call("/", host="evil.example.com:8765")
 assert st == 403
 print("security ok")
 
-ev = text("photoshop kholo"); print(says(ev)); assert actions_pc.DONE and "Photoshop" in says(ev)[0]
+ev = text("photoshop kholo"); print(says(ev)); assert actions_pc.DONE and "Photoshop" in says(ev)[0] and "खोल" in says(ev)[0]
+ev = text("open photoshop"); print(says(ev)); assert says(ev)[0] == "Opening Photoshop.", says(ev)
+ev = text("what time is it"); print(says(ev)); assert says(ev)[0].startswith("It's"), says(ev)
 ev = text("क्रोम बंद करो"); print(says(ev)); assert "बंद" in says(ev)[0]
 ev = text("कंप्यूटर बंद करो"); print(says(ev)); assert "पक्का" in says(ev)[0] and not any("shutdown" in str(d) for d in actions_pc.DONE)
 ev = text("हाँ", 1.5); print(says(ev)); assert any(d[0] == "shutdown" for d in actions_pc.DONE if isinstance(d, list)), actions_pc.DONE

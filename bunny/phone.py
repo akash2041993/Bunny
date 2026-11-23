@@ -43,9 +43,11 @@ def adb(*args, serial=None, timeout=20):
 def devices():
     code, out = adb("devices")
     res = []
-    for line in out.splitlines()[1:]:
+    for line in out.splitlines():
         parts = line.split()
-        if len(parts) >= 2:
+        # skip "List of devices attached" and "* daemon started" lines
+        if len(parts) >= 2 and not line.startswith(("*", "List")) and parts[1] in (
+                "device", "unauthorized", "offline", "recovery", "sideload", "authorizing", "no"):
             res.append((parts[0], parts[1]))  # (serial, "device" | "unauthorized" | "offline")
     return res
 

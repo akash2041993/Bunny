@@ -31,7 +31,7 @@ FILLER = {"hey", "hi", "hello", "ok", "okay", "oye", "oy", "arre", "are", "o", "
 
 OPEN = {"open", "kholo", "khol", "kholna", "kholdo", "kholde", "kholiye", "khulo", "chalu", "chalao", "chala",
         "chalaao", "chalado", "start", "launch", "shuru", "run", "laga", "lagao", "dikhao", "dikha", "on",
-        "opan", "opn", "oupan", "staart", "lonch", "laanch"}
+        "opan", "opn", "oupan", "apan", "apn", "staart", "lonch", "laanch"}
 CLOSE = {"close", "band", "bandh", "bnd", "bando", "hatao", "hata", "exit", "quit", "kill", "khatam", "off",
          "nikal", "nikalo", "kloz", "kloj", "klos", "klose", "egzit", "kvit"}
 DEVICE_PC = {"computer", "kampyutar", "kampyutr", "kompyutar", "compyutar", "pc", "laptop", "system",
@@ -40,9 +40,9 @@ DEVICE_PHONE = {"phone", "fon", "mobile", "mobail", "phon", "fone"}
 
 VOL = {"volume", "valyum", "volyum", "awaaz", "aawaaz", "aavaaz", "awaz", "aawaz", "avaaz", "sound", "saund",
        "aavaz", "aawaj", "awaj"}
-UP = {"up", "badhao", "badha", "badhaao", "badhaa", "increase", "tez", "jyada", "zyada", "jada", "full", "max",
+UP = {"up", "louder", "raise", "badhao", "badha", "badhaao", "badhaa", "increase", "tez", "jyada", "zyada", "jada", "full", "max",
       "upar", "loud", "high", "badao"}
-DOWN = {"down", "kam", "decrease", "dheere", "dhire", "dheema", "low", "neeche", "niche", "halki", "halka",
+DOWN = {"down", "lower", "quieter", "softer", "kam", "decrease", "dheere", "dhire", "dheema", "low", "neeche", "niche", "halki", "halka",
         "dheemi"}
 MEDIA = {"gaana", "gana", "song", "music", "myujik", "video", "vidio", "gaane", "audio"}
 PAUSE = {"roko", "ruko", "rok", "pause", "stop", "ruk", "rukao", "thamo", "band"}
@@ -269,9 +269,10 @@ def parse(text, installed_apps=None, running=None):
     closing = _has(words, CLOSE)
 
     # stop / sleep / cancel
-    if joined in ("chup", "chup ho jao", "chup raho", "stop", "bas", "bas karo", "ruk jao", "shut up", "quiet"):
+    if joined in ("chup", "chup ho jao", "chup raho", "stop", "bas", "bas karo", "ruk jao", "shut up", "quiet",
+                  "be quiet", "stop talking", "keep quiet"):
         return {"action": "stop_talking"}
-    if re.search(r"\b(so jao|so ja|sleep mode|good night|goodnight|aaram karo)\b", joined) and not pc:
+    if re.search(r"\b(so jao|so ja|sleep mode|good night|goodnight|aaram karo|go to sleep)\b", joined) and not pc:
         return {"action": "go_sleep"}
     if re.search(r"\b(cancel|mat karo|rehne do|rahne do|nahi karna)\b", joined) and re.search(
             r"\b(shutdown|shut down|band)\b", joined):
@@ -319,11 +320,12 @@ def parse(text, installed_apps=None, running=None):
         return {"action": "phone_screenshot" if phone else "screenshot"}
     if re.search(r"\b(desktop dikhao|desktop pe jao|sab minimize|minimize all|sab chhota)\b", joined):
         return {"action": "show_desktop"}
-    if re.search(r"\b(kitne baje|kya time|time kya|samay kya|time batao|kya samay|time hua|baj rahe)\b", joined) \
+    if re.search(r"\b(kitne baje|kya time|time kya|samay kya|time batao|kya samay|time hua|baj rahe|"
+                 r"what time|time is it|the time|whats the time)\b", joined) \
             or joined in ("time", "samay"):
         return {"action": "time"}
-    if re.search(r"\b(aaj ki date|date kya|tareekh|taarikh|tarikh|aaj kya din|kaun sa din|aaj kaunsa din)\b",
-                 joined) or joined in ("date",):
+    if re.search(r"\b(aaj ki date|date kya|tareekh|taarikh|tarikh|aaj kya din|kaun sa din|aaj kaunsa din|"
+                 r"what day|todays date|the date|what date)\b", joined) or joined in ("date",):
         return {"action": "date"}
 
     # phone navigation / Bunny face back

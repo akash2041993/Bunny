@@ -46,12 +46,12 @@ def _worker():
         try:
             if kind == "audio":
                 emit({"type": "state", "state": "hearing"})
-                text = stt.transcribe(payload)
+                text, lang = stt.transcribe(payload)
                 if not text:
                     emit({"type": "ignored", "heard": ""})
                     continue
                 print("Heard:", text)
-                brain.hear(text, follow=follow)
+                brain.hear(text, follow=follow, spoken=lang)
             else:
                 print("Typed:", payload)
                 brain.hear(payload, follow=True, source="text")
