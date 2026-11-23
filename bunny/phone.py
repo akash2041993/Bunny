@@ -61,7 +61,8 @@ def _setup(serial, port):
 
 
 def open_face(serial=None, port=config.PORT):
-    return adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", f"http://localhost:{port}",
+    # 127.0.0.1, not "localhost": "localhost" may go to another program on IPv6
+    return adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", f"http://127.0.0.1:{port}",
                "com.android.chrome", serial=serial)[0] == 0
 
 

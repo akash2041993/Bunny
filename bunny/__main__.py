@@ -106,7 +106,7 @@ def main():
         time.sleep(6)
         return 1
     print(f"Bunny {config.VERSION} is awake on this computer. Keep this window open (you can minimise it).")
-    print(f"  Face on this PC (to test with the PC microphone): http://localhost:{port}")
+    print(f"  Face on this PC (to test with the PC microphone): http://127.0.0.1:{port}")
     print("  Phone: plug the S10e in with USB (USB debugging on) - the face opens on it by itself.")
     print("  Security: Bunny only listens on this computer, needs its secret token, and cannot send or share files.")
     threading.Thread(target=_ears, daemon=True).start()
