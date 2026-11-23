@@ -1,0 +1,110 @@
+name: Build Bunny
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  brain-test:
+    # real offline AI (Ollama + the default model) answering in Hindi, picking commands, refusing to share
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+      - name: Install Ollama and the model
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          (ollama serve > ollama.log 2>&1 &)
+          sleep 5
+          ollama pull gemma3:4b
+      - name: Brain test
+        run: python tests/test_brain_real.py
+
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install Python parts
+        run: pip install faster-whisper pyinstaller huggingface_hub
+
+      - name: Logic + security tests
+        env:
+          PYTHONIOENCODING: utf-8
+        run: |
+          python tests/test_intents.py
+          python tests/test_server.py
+
+      - name: Get the speech model (Whisper small) and adb
+        shell: pwsh
+        run: |
+          python -c "from huggingface_hub import snapshot_download; snapshot_download('Systran/faster-whisper-small', local_dir='models/whisper-small')"
+          Remove-Item -Recurse -Force models/whisper-small/.cache -ErrorAction SilentlyContinue
+          Get-ChildItem models/whisper-small
+          Invoke-WebRequest https://dl.google.com/android/repository/platform-tools-latest-windows.zip -OutFile pt.zip
+          Expand-Archive pt.zip -DestinationPath .
+          Get-ChildItem platform-tools | Where-Object { $_.Name -notmatch '^(adb\.exe|AdbWinApi\.dll|AdbWinUsbApi\.dll|NOTICE\.txt)$' } | Remove-Item -Recurse -Force
+          Get-ChildItem platform-tools
+
+      - name: Build Bunny.exe
+        run: >
+          pyinstaller --noconfirm --onedir --console --name Bunny --icon installer/bunny.ico
+          --add-data "bunny/web;bunny/web" --add-data "models;models" --add-data "platform-tools;platform-tools"
+          --collect-all faster_whisper --collect-all ctranslate2 --collect-all av --collect-all onnxruntime --collect-all tokenizers
+          run_bunny.py
+
+      - name: Make a test voice clip (Windows speech)
+        shell: pwsh
+        run: |
+          Add-Type -AssemblyName System.Speech
+          $s = New-Object System.Speech.Synthesis.SpeechSynthesizer
+          $s.Rate = -1
+          $s.SetOutputToWaveFile("$PWD\speech.wav")
+          $s.Speak("Bunny, open Photoshop.")
+          $s.Dispose()
+
+      - name: Test the built Bunny.exe (hears a voice clip and understands it)
+        env:
+          PYTHONIOENCODING: utf-8
+        run: python tests/smoke_exe.py dist/Bunny/Bunny.exe speech.wav
+
+      - name: Build the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          $env:BUNNY_VERSION = "0.1.${{ github.run_number }}"
+          & $iscc installer/Bunny.iss
+          if ($LASTEXITCODE -ne 0) { throw "installer build failed" }
+          Get-ChildItem out
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: bunny-windows
+          path: out/Bunny-Setup.exe
+
+  release:
+    needs: [windows]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v3
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Bunny 0.1.${{ github.run_number }}
+          body: |
+            Download Bunny-Setup.exe and run it. Then plug in the phone (USB debugging on) or open http://localhost:8765 on the PC.
+          files: dist/Bunny-Setup.exe
