@@ -12,7 +12,7 @@ got = []
 def fake_transcribe(b):
     with wave.open(io.BytesIO(b)) as w:
         got.append((w.getframerate(), w.getnchannels(), w.getnframes() / w.getframerate()))
-    return "बनी ब्लैक होल क्या होता है" if len(got) == 1 else ""
+    return ("बनी ब्लैक होल क्या होता है", "hi") if len(got) == 1 else ("", "hi")
 server.stt.transcribe = fake_transcribe
 server.stt.status["ready"] = True
 httpd = server.serve(0); port = httpd.server_address[1]
