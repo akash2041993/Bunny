@@ -52,8 +52,19 @@ def devices():
     return res
 
 
+_link_ok = {}
+
+
 def _setup(serial, port):
-    adb("reverse", f"tcp:{port}", f"tcp:{port}", serial=serial)
+    code, out = adb("reverse", f"tcp:{port}", f"tcp:{port}", serial=serial)
+    _, lst = adb("reverse", "--list", serial=serial)
+    ok = f"tcp:{port}" in lst
+    if _link_ok.get(serial) != ok:  # report changes only
+        _link_ok[serial] = ok
+        if ok:
+            print(f"Phone link ready: on the phone, Bunny is at http://127.0.0.1:{port}")
+        else:
+            print("Phone link FAILED (adb reverse):", (out or lst).strip()[:300])
     if serial not in _seen:
         _seen.add(serial)
         adb("shell", "svc", "power", "stayon", "usb", serial=serial)   # screen stays on while charging
