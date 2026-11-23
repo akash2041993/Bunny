@@ -11,7 +11,7 @@ _model = None
 _lock = threading.Lock()
 status = {"ready": False, "error": None, "model": None}
 
-PROMPT = "बनी, Bunny. फोटोशॉप खोलो, क्रोम बंद करो, प्रीमियर प्रो, यूट्यूब, कंप्यूटर।"
+PROMPT = "बनी, पिक्सल, रोबो।"
 
 
 def _model_path(size):
@@ -74,6 +74,22 @@ def _detect(model, audio):
     return "en" if lang == "en" and prob >= 0.5 else "hi"
 
 
+def _is_noise(text):
+    """Whisper invents repeated words for noise or music ("oh, oh, oh, oh ..."): throw those away."""
+    words = [w.strip(" ,.।!?").lower() for w in text.split()]
+    words = [w for w in words if w]
+    if len(words) >= 6:
+        top = max(words.count(w) for w in set(words))
+        if top / len(words) >= 0.5:
+            return True
+    run = 1
+    for a, b in zip(words, words[1:]):
+        run = run + 1 if a == b else 1
+        if run >= 4:
+            return True
+    return False
+
+
 def transcribe(wav_bytes):
     """Returns (spoken text, 'hi' | 'en'). Text is '' for noise."""
     cfg = config.load()
@@ -84,16 +100,19 @@ def transcribe(wav_bytes):
     lang = cfg.get("stt_language") or "auto"
     if lang == "auto":
         lang = _detect(model, audio)
-    prompt = PROMPT if lang == "hi" else "Bunny, open Photoshop, close Chrome, Premiere Pro, YouTube."
+    prompt = PROMPT if lang == "hi" else "Bunny, Pixel, Robo."
     segments, _info = model.transcribe(audio, language=lang, beam_size=3, vad_filter=True,
                                        condition_on_previous_text=False, initial_prompt=prompt,
-                                       no_speech_threshold=0.6, temperature=0.0)
+                                       no_speech_threshold=0.6, temperature=0.0,
+                                       compression_ratio_threshold=2.0, log_prob_threshold=-1.0)
     parts = []
     for s in segments:
         if s.no_speech_prob > 0.7 and s.avg_logprob < -0.8:
             continue
         parts.append(s.text.strip())
     text = " ".join(p for p in parts if p).strip()
+    if _is_noise(text):
+        return "", lang
     # whisper sometimes "hears" its own prompt or stock phrases in noise
     if text.strip(" ।.,") in ("", PROMPT.strip(" ।"), prompt.strip(" ."), "Thank you", "धन्यवाद", "सब्सक्राइब करें"):
         return "", lang

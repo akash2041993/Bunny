@@ -42,6 +42,10 @@ def adb(*args, serial=None, timeout=20):
 
 def devices():
     code, out = adb("devices")
+    state["raw"] = out.strip()
+    if code != 0 and state.get("adb_err") != out:
+        state["adb_err"] = out
+        print("Phone check problem (adb):", out.strip()[:300])
     res = []
     for line in out.splitlines():
         parts = line.split()
@@ -102,11 +106,17 @@ def watch(port=config.PORT, emit=None):
                         print("Phone found: tap 'Allow' on the USB debugging message on the phone.")
                     elif st == "device":
                         print(f"Phone connected ({s}). Bunny's face opens on it.")
+                    else:
+                        print(f"Phone found but not ready (state: {st}). Unplug and plug the cable again.")
+                if not summary:
+                    print("No phone found on USB. On the phone: USB debugging on, cable in, USB mode 'Transferring files'.")
                 for s in list(_seen):
                     if s not in [x for x, _ in summary]:
                         _seen.discard(s)
                 last = summary
         except Exception as e:  # noqa: BLE001 - keep watching
+            if state["error"] != str(e):
+                print("Phone link problem:", e)
             state["error"] = str(e)
         time.sleep(3)
 
