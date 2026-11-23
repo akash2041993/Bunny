@@ -1,6 +1,6 @@
 """The S10e over the USB cable (adb). Only used locally: nothing goes to the internet.
 
-- keeps the link "phone -> http://localhost:8765" working (adb reverse), so the face page on the
+- keeps the link "phone -> http://127.0.0.1:<port>" working (adb reverse), so the face page on the
   phone talks to this PC through the cable, not through Wi-Fi;
 - keeps the screen on while plugged in and opens Bunny's face in Chrome;
 - a few phone actions: open an app, volume, home/back, screenshot (saved on the PC), restart.
@@ -15,7 +15,7 @@ import time
 from . import config, intents
 
 _NOWINDOW = 0x08000000 if os.name == "nt" else 0
-state = {"devices": [], "adb": None, "error": None}
+state = {"devices": [], "adb": None, "error": None, "port": config.PORT}
 _seen = set()
 
 
@@ -71,7 +71,8 @@ def _setup(serial, port):
         open_face(serial, port)
 
 
-def open_face(serial=None, port=config.PORT):
+def open_face(serial=None, port=None):
+    port = port or state["port"]
     # 127.0.0.1, not "localhost": "localhost" may go to another program on IPv6
     return adb("shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", f"http://127.0.0.1:{port}",
                "com.android.chrome", serial=serial)[0] == 0
@@ -80,6 +81,7 @@ def open_face(serial=None, port=config.PORT):
 def watch(port=config.PORT, emit=None):
     """Background loop: notice the phone being plugged in / unlocked / unplugged."""
     state["adb"] = adb_path()
+    state["port"] = port
     if not state["adb"]:
         state["error"] = "adb not found"
         return
@@ -165,7 +167,7 @@ def restart():
     return adb("reboot", serial=s)[0] == 0
 
 
-def start_watcher(emit=None):
-    t = threading.Thread(target=watch, kwargs={"emit": emit}, daemon=True)
+def start_watcher(emit=None, port=config.PORT):
+    t = threading.Thread(target=watch, kwargs={"emit": emit, "port": port}, daemon=True)
     t.start()
     return t

@@ -96,14 +96,32 @@ def _brain():
     server.emit({"type": "status", "part": "brain", "text": "brain_ready"})
 
 
+def _is_bunny(port):
+    import json
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{port}/manifest.json", timeout=3) as r:
+            return json.loads(r.read().decode()).get("name") == "Bunny"
+    except Exception:  # noqa: BLE001
+        return False
+
+
 def main():
     cfg = config.load()
-    port = config.PORT
-    try:
-        httpd = server.serve(port)
-    except OSError:
-        print(f"Bunny is already running (port {port} is busy). You can close this window.")
-        time.sleep(6)
+    httpd = None
+    for port in range(config.PORT, config.PORT + 5):
+        try:
+            httpd = server.serve(port)
+            break
+        except OSError:
+            if _is_bunny(port):
+                print("Bunny is already running. You can close this window.")
+                time.sleep(6)
+                return 1
+            print(f"Port {port} is used by another program, trying the next one...")
+    if httpd is None:
+        print("Could not find a free port for Bunny. Restart the PC and try again.")
+        time.sleep(10)
         return 1
     print(f"Bunny {config.VERSION} is awake on this computer. Keep this window open (you can minimise it).")
     print(f"  Face on this PC (to test with the PC microphone): http://127.0.0.1:{port}")
@@ -111,7 +129,7 @@ def main():
     print("  Security: Bunny only listens on this computer, needs its secret token, and cannot send or share files.")
     threading.Thread(target=_ears, daemon=True).start()
     threading.Thread(target=_brain, daemon=True).start()
-    phone.start_watcher(server.emit)
+    phone.start_watcher(server.emit, port)
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:

@@ -41,7 +41,7 @@ You talk to it in Hindi, Hinglish or English:
    - Settings ▸ Developer options ▸ turn on **USB debugging**.
    - Plug it into the PC. Tap **Allow** on the "Allow USB debugging?" message, and tick "Always allow".
    - Bunny's face opens in Chrome by itself. Tap the screen and allow the microphone.
-4. No phone handy? Open **http://127.0.0.1:8765** on the PC to talk to Bunny with the PC microphone.
+4. No phone handy? Open **http://127.0.0.1:47865** on the PC to talk to Bunny with the PC microphone.
 
 **Better Hindi voice on the phone:** Settings ▸ General management ▸ Text-to-speech ▸ choose **Google**, then download
 the **Hindi (India)** voice.

@@ -5,8 +5,8 @@ import secrets
 import sys
 import threading
 
-VERSION = "0.2.1"
-PORT = 8765
+VERSION = "0.2.2"
+PORT = 47865  # an unusual port, so no other program on the PC is likely to use it
 
 _lock = threading.Lock()
 

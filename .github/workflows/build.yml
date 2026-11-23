@@ -106,5 +106,5 @@ jobs:
           tag_name: build-${{ github.run_number }}
           name: Bunny 0.2.${{ github.run_number }}
           body: |
-            Download Bunny-Setup.exe and run it. Then plug in the phone (USB debugging on) or open http://localhost:8765 on the PC.
+            Download Bunny-Setup.exe and run it. Then plug in the phone (USB debugging on) or open http://127.0.0.1:47865 on the PC.
           files: dist/Bunny-Setup.exe

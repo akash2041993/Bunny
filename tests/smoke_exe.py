@@ -7,7 +7,7 @@ env = dict(os.environ, BUNNY_DRY_RUN="1", BUNNY_HOME=home, PYTHONIOENCODING="utf
 proc = subprocess.Popen([exe], env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 lines = []
 threading.Thread(target=lambda: [lines.append(l.decode("utf-8", "replace").rstrip()) for l in proc.stdout], daemon=True).start()
-base = "http://127.0.0.1:8765"
+base = "http://127.0.0.1:47865"
 try:
     tok = None
     for _ in range(120):

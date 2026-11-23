@@ -219,11 +219,21 @@ def status():
             "phone": phone.state.get("devices"), "adb": bool(phone.state.get("adb"))}
 
 
+class _Server(ThreadingHTTPServer):
+    """Only Bunny may use this port: no sharing with another program (Windows allows sharing otherwise)."""
+    allow_reuse_address = os.name != "nt"
+    daemon_threads = True
+
+    def server_bind(self):
+        if os.name == "nt":
+            import socket
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
+
+
 def serve(port=config.PORT):
     from .brain import Brain
     global brain
     brain = Brain(emit)
     threading.Thread(target=_worker, daemon=True).start()
-    httpd = ThreadingHTTPServer(("127.0.0.1", port), Handler)
-    httpd.daemon_threads = True
-    return httpd
+    return _Server(("127.0.0.1", port), Handler)
