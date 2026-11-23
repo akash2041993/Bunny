@@ -5,7 +5,7 @@ import json
 import urllib.error
 import urllib.request
 
-from . import config, intents
+from . import characters, config, intents
 
 LANG_RULE = {
     "hindi": "हमेशा हिंदी में, देवनागरी लिपि में जवाब दो (अंग्रेज़ी के आम शब्द देवनागरी में लिख सकते हो)।",
@@ -15,9 +15,10 @@ LANG_RULE = {
 
 
 def system_prompt(cfg, lang=None):
-    name, user = cfg.get("bunny_name", "Bunny"), cfg.get("user_name", "Akash")
+    ch = characters.get(cfg.get("character"))
+    name, user = ch["name"], cfg.get("user_name", "Akash")
     return (
-        f"You are {name}, a cute, warm and playful little bunny who is {user}'s AI friend. "
+        f"You are {name}, {ch['persona']}, and {user}'s AI friend. "
         f"{user} is a video editor from Indore. You live on his old phone and his PC. "
         "You are speaking out loud, so: answer in 1 to 3 short sentences unless he asks for detail, "
         "no markdown, no lists, no emojis, no symbols. "

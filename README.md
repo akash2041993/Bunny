@@ -1,6 +1,15 @@
 # 🐰 Bunny: your offline AI desk buddy
 
-Bunny lives on your old phone (Galaxy S10e) as a cute bunny face and on your Windows PC as its brain.
+Bunny lives on your old phone (Galaxy S10e) as a cute animated face and on your Windows PC as its brain.
+
+**Three buddies**, each with its own face, voice and personality. Say a name to call that buddy, or tap 🎭 on the phone:
+
+| Buddy | Face | Say |
+|---|---|---|
+| **Bunny** | a cute white bunny | "Bunny …" |
+| **Pixel** | just two glowing eyes | "Pixel …" |
+| **Robo** | a cheerful orange toy robot | "Robo …" |
+
 You talk to it in Hindi, Hinglish or English:
 
 - **"Bunny, Photoshop kholo"** opens Photoshop, **"Bunny, Chrome band karo"** closes Chrome (normally,
@@ -11,7 +20,8 @@ You talk to it in Hindi, Hinglish or English:
 - **"Bunny, phone pe YouTube kholo"**, **"phone ki awaaz badhao"**, **"Bunny wapas aao"**
 - **"Bunny, computer band karo"** asks "pakka?" first, then shuts down in 30 seconds (**"Bunny cancel karo"** stops it)
 - **"Bunny, black hole kya hota hai?"** is answered by an AI model running **offline** on your PC
-- **"Bunny, chup"** stops talking. **"Bunny, so jao"** sends Bunny to sleep. Tap Bunny's face to talk without saying "Bunny".
+- **"Bunny, chup"** stops talking. **"Bunny, so jao"** sends Bunny to sleep. Tap the face to talk without saying the name.
+- Speak English and it answers in English; speak Hindi or Hinglish and it answers in Hindi.
 
 ## Security
 
@@ -42,7 +52,8 @@ the **Hindi (India)** voice.
 
 | Setting | What it does |
 |---|---|
-| `reply_language` | `hindi`, `english` or `hinglish` |
+| `reply_language` | `auto` (same language you spoke), `hindi`, `english` or `hinglish` |
+| `character` | `bunny`, `pixel` or `robo` |
 | `llm_model` | `gemma3:4b` (default, 16 GB RAM). Use `gemma3:1b` for 8 GB RAM, or `gemma3:12b` for a strong PC with a graphics card |
 | `whisper_model` | `small` (included) |
 | `custom_apps` | your own apps, for example `{"my game": "D:\\Games\\game.exe"}` |

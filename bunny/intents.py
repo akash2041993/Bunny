@@ -334,7 +334,7 @@ def parse(text, installed_apps=None, running=None):
             return {"action": "phone_home"}
         if re.search(r"\b(back|peeche|wapas jao)\b", joined) and not opening:
             return {"action": "phone_back"}
-    if re.search(r"\b(bunny|bani|banni) (wapas|vapas|ko wapas)\b", joined) or joined in ("wapas aao", "vapas aao"):
+    if re.search(r"\b(wapas aao|vapas aao|wapas aa jao|vapas aa jao|come back)\b", joined) or joined in ("wapas", "vapas"):
         return {"action": "phone_bunny"}
 
     if phone and opening:

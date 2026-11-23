@@ -83,7 +83,7 @@ jobs:
         run: |
           $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
           if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress; $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
-          $env:BUNNY_VERSION = "0.1.${{ github.run_number }}"
+          $env:BUNNY_VERSION = "0.2.${{ github.run_number }}"
           & $iscc installer/Bunny.iss
           if ($LASTEXITCODE -ne 0) { throw "installer build failed" }
           Get-ChildItem out
@@ -104,7 +104,7 @@ jobs:
       - uses: softprops/action-gh-release@v3
         with:
           tag_name: build-${{ github.run_number }}
-          name: Bunny 0.1.${{ github.run_number }}
+          name: Bunny 0.2.${{ github.run_number }}
           body: |
             Download Bunny-Setup.exe and run it. Then plug in the phone (USB debugging on) or open http://localhost:8765 on the PC.
           files: dist/Bunny-Setup.exe

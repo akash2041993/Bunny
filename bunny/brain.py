@@ -5,7 +5,7 @@ import threading
 import time
 
 from . import actions_pc as pc
-from . import config, intents, llm, phone
+from . import characters, config, intents, llm, phone
 
 MSG = {
     "wake": (["हाँ, बोलो?", "जी, बोलिए!", "हाँ {user}, बोलो?"], ["Yes?", "Yes {user}, tell me!"],
@@ -66,6 +66,8 @@ MSG = {
                          "Saved the phone screenshot in Pictures, Bunny on the computer.",
                          "Phone ka screenshot computer ke Pictures, Bunny folder mein rakh diya."),
     "phone_bunny": ("मैं वापस आ गया!", "I'm back!", "Main wapas aa gaya!"),
+    "switched": ("नमस्ते! मैं {name} हूँ। बोलो, क्या करूँ?", "Hi! I'm {name}. What can I do?",
+                 "Namaste! Main {name} hoon. Bolo, kya karoon?"),
     "phone_restart": ("फ़ोन रीस्टार्ट हो रहा है, थोड़ी देर में वापस आता हूँ।", "Restarting the phone, back soon.",
                       "Phone restart ho raha hai, thodi der mein wapas aata hoon."),
     "go_sleep": ("ठीक है, मैं सोने जा रहा हूँ। बुलाना हो तो बनी बोलना।", "Okay, going to sleep. Say Bunny to wake me.",
@@ -128,15 +130,37 @@ class Brain:
         spoken: 'en' / 'hi' from speech-to-text, so Bunny answers in the language you used."""
         cfg = config.load()
         self.turn_lang = reply_language(text, spoken)
-        found, rest = intents.find_wake(text, cfg.get("wake_words", []))
+        current = cfg.get("character", "bunny")
+        found, rest, who = False, intents.to_roman(text), None
+        # the current character first, then the others (calling another name switches to it)
+        order = [current] + [c for c in characters.ORDER if c != current]
+        for cid in order:
+            words = characters.get(cid)["wake"] + (cfg.get("wake_words") or [])
+            f, r = intents.find_wake(text, words)
+            if f:
+                found, rest, who = True, r, cid
+                break
         if not (found or follow or source != "voice"):
             self.emit({"type": "ignored", "heard": text})
             return None
         self.emit({"type": "heard", "text": text})
+        if who and who != current:
+            self.switch(who)
+            if not rest:
+                self.say(self.m("switched", name=characters.get(who)["name"]), mood="happy")
+                return {"switched": who}
         if not rest:
             self.say(self.m("wake"), mood="listening")
             return {"wake": True}
         return self.handle(rest)
+
+    def switch(self, cid):
+        if cid not in characters.CHARACTERS:
+            return False
+        config.save({"character": cid})
+        self.history = []  # a new friend starts a new conversation
+        self.emit({"type": "character", "id": cid, "name": characters.get(cid)["name"]})
+        return True
 
     def handle(self, rest):
         words = set(rest.split())

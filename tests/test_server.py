@@ -64,4 +64,13 @@ ev = text("blaik hol kya hota hai", 2); print(says(ev)); assert len(says(ev)) >=
 assert any(e["type"] == "say_end" for e in ev)
 ev = text("kitne baje hain"); print(says(ev)); assert "बज" in says(ev)[0]
 ev = text("photo wala app chalu kar do please"); print(says(ev))  # via the AI classifier
+# characters: saying another name switches to it
+n = len(events); call("/api/text", {"text": "pixel"}); time.sleep(1); ev = events[n:]
+print(says(ev)); assert config.load()["character"] == "pixel" and any(e["type"] == "character" and e["id"] == "pixel" for e in ev)
+assert "Pixel" in says(ev)[0]
+ev = text("रोबो क्रोम खोलो"); print(says(ev)); assert config.load()["character"] == "robo" and "Chrome" in says(ev)[-1]
+st, _ = call("/api/character", {"id": "bunny"}); assert st == 200 and config.load()["character"] == "bunny"
+st, _ = call("/api/character", {"id": "astro"}); assert st == 400
+from bunny import llm
+assert "Robo" not in llm.system_prompt(config.load()) and "Bunny" in llm.system_prompt(config.load())
 print("ALL SERVER TESTS PASSED")

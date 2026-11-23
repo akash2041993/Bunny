@@ -19,7 +19,7 @@ import traceback
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
-from . import config, llm, phone, stt
+from . import characters, config, llm, phone, stt
 
 _clients = []
 _clients_lock = threading.Lock()
@@ -112,8 +112,9 @@ class Handler(BaseHTTPRequestHandler):
             with open(os.path.join(config.web_dir(), "index.html"), "r", encoding="utf-8") as f:
                 page = f.read()
             cfg = config.load()
-            boot = {"token": cfg["token"], "name": cfg.get("bunny_name", "Bunny"), "version": config.VERSION,
-                    "follow": cfg.get("follow_up_seconds", 8), "lang": cfg.get("reply_language", "hindi")}
+            boot = {"token": cfg["token"], "version": config.VERSION, "follow": cfg.get("follow_up_seconds", 8),
+                    "lang": cfg.get("reply_language", "auto"), "character": cfg.get("character", "bunny"),
+                    "characters": characters.public()}
             page = page.replace("/*BOOT*/null", json.dumps(boot))
             self._send(200, page, "text/html; charset=utf-8")
             return
@@ -160,6 +161,16 @@ class Handler(BaseHTTPRequestHandler):
                 return
             _work.put(("audio", body, follow))
             self._send(202, {"ok": True})
+            return
+        if u.path == "/api/character":
+            try:
+                cid = (json.loads(body.decode() or "{}").get("id") or "").strip()
+            except ValueError:
+                cid = ""
+            ok = brain.switch(cid)
+            if ok:
+                brain.say(brain.m("switched", name=characters.get(cid)["name"]), mood="happy")
+            self._send(200 if ok else 400, {"ok": ok})
             return
         if u.path == "/api/text":
             try:

@@ -5,7 +5,7 @@ import secrets
 import sys
 import threading
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 PORT = 8765
 
 _lock = threading.Lock()
@@ -37,13 +37,13 @@ def web_dir():
 
 DEFAULTS = {
     "user_name": "Akash",
-    "bunny_name": "Bunny",
+    "character": "bunny",               # bunny | pixel | robo (say a name to switch)
     "reply_language": "auto",           # auto (answer in the language you spoke) | hindi | english | hinglish
     "llm_model": "gemma3:4b",            # Ollama model; gemma3:1b for PCs with 8 GB RAM
     "ollama_url": "http://127.0.0.1:11434",
     "whisper_model": "small",            # tiny | base | small | medium
     "stt_language": "auto",              # auto (Hindi or English per sentence) | hi | en
-    "wake_words": ["bunny", "bani", "banni", "bunni", "bonny", "buni", "bany", "baani"],
+    "wake_words": [],                    # extra wake words (each character also answers to its own name)
     "follow_up_seconds": 8,              # after Bunny answers, you can talk again without "Bunny"
     "custom_apps": {},                   # "my editor": "C:\\path\\to\\app.exe"
     "token": "",                         # secret the face page must send (made on first start)

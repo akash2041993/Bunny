@@ -51,6 +51,20 @@ with sync_playwright() as p:
         pg.evaluate(f"setState('{s}')"); time.sleep(0.6)
         pg.screenshot(path=f"{out}/4_{s}.png")
     pg.evaluate("talking=true; setState('speaking')"); time.sleep(0.3); pg.screenshot(path=f"{out}/5_speaking.png")
+    pg.evaluate("talking=false")
+    for ch in ["pixel", "robo"]:
+        pg.evaluate(f"setChar('{ch}')"); time.sleep(0.4)
+        for st in ["idle", "listening", "thinking", "happy", "confused", "sleep"]:
+            pg.evaluate(f"setState('{st}')"); time.sleep(0.5)
+            pg.screenshot(path=f"{out}/7_{ch}_{st}.png")
+        pg.evaluate("talking=true; setState('speaking')"); time.sleep(0.35); pg.screenshot(path=f"{out}/7_{ch}_speaking.png")
+        pg.evaluate("talking=false")
+    pg.evaluate("setChar('bunny'); setState('idle')")
+    pg.click("#btnChar"); time.sleep(0.6); pg.screenshot(path=f"{out}/8_picker.png")
+    pg.click(".card[data-id='robo']"); time.sleep(0.8)
+    assert pg.evaluate("document.body.dataset.char") == "robo"
+    from bunny import config as _c
+    assert _c.load()["character"] == "robo", "picker should tell the PC"
     ctx2 = b.new_context(viewport={"width": 360, "height": 740}, device_scale_factor=2)
     p2 = ctx2.new_page(); p2.goto(f"http://localhost:{port}/"); p2.evaluate("document.getElementById('start').classList.add('gone')"); time.sleep(0.5)
     p2.screenshot(path=f"{out}/6_portrait.png")
