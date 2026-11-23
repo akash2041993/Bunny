@@ -5,7 +5,7 @@ import secrets
 import sys
 import threading
 
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 PORT = 8765
 
 _lock = threading.Lock()

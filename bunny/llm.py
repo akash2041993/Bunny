@@ -64,8 +64,13 @@ def pull(name, progress=None):
                 continue
             if ev.get("error"):
                 raise RuntimeError(ev["error"])
-            if progress and ev.get("total"):
-                progress(ev.get("completed", 0) / ev["total"], ev.get("status", ""))
+            if progress:
+                if ev.get("total"):
+                    progress(ev.get("completed", 0) / ev["total"], ev.get("status", ""))
+                else:
+                    progress(None, ev.get("status", ""))  # "verifying sha256 digest", "writing manifest", "success"
+            if ev.get("status") == "success":
+                break
     return True
 
 

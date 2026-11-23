@@ -53,17 +53,42 @@ def _brain():
         return
     if not llm.has_model(model, st["models"]):
         print(f"Brain: downloading the offline AI model '{model}' once (a few GB)...")
-        last = [0.0]
+        last = [0.0, ""]
 
         def prog(f, s):
+            if f is None:  # after the download: checking / saving
+                if s and s != last[1]:
+                    last[1] = s
+                    nice = {"verifying sha256 digest": "checking the download (1-3 minutes)...",
+                            "writing manifest": "saving...", "success": "done."}.get(s, s)
+                    print(f"\n  {model}: {nice}", end="")
+                    server.emit({"type": "status", "part": "brain", "text": "brain_download", "progress": 1.0})
+                return
             if f - last[0] >= 0.01:
                 last[0] = f
                 server.emit({"type": "status", "part": "brain", "text": "brain_download", "progress": round(f, 3)})
                 print(f"  {model}: {f * 100:.0f}%", end="\r")
+
+        # if the pull's connection hangs after the model is already saved, notice it anyway
+        done = threading.Event()
+
+        def watch_ready():
+            while not done.wait(15):
+                if llm.has_model(model, llm.status()["models"]):
+                    done.set()
+                    print(f"\nBrain ready (offline AI: {model}).")
+                    server.emit({"type": "status", "part": "brain", "text": "brain_ready"})
+        threading.Thread(target=watch_ready, daemon=True).start()
         try:
             llm.pull(model, prog)
             print()
+            if done.is_set():
+                return
+            done.set()
         except Exception as e:  # noqa: BLE001
+            if done.is_set():
+                return
+            done.set()
             print("Brain download failed:", e)
             server.emit({"type": "status", "part": "brain", "text": "brain_error", "detail": str(e)})
             return
